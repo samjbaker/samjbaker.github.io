@@ -1,39 +1,35 @@
-/*const scene = new THREE.Scene();
-			const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+import * as THREE from './js/three.module.js';
 
-			const renderer = new THREE.WebGLRenderer();
-			renderer.setSize( window.innerWidth, window.innerHeight );
-			document.body.appendChild( renderer.domElement );
+let camera, scene, renderer;
+let geometry, material, mesh;
 
-			const geometry = new THREE.BoxGeometry();
-			const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-			const cube = new THREE.Mesh( geometry, material );
-			scene.add( cube );
+init();
 
-			camera.position.z = 5;
+function init() {
 
-			const animate = function () {
-				requestAnimationFrame( animate );
+	camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 10 );
+	camera.position.z = 1;
 
-				cube.rotation.x += 0.01;
-				cube.rotation.y += 0.01;
+	scene = new THREE.Scene();
 
-				renderer.render( scene, camera );
-			};
+	geometry = new THREE.BoxGeometry( 0.2, 0.2, 0.2 );
+	material = new THREE.MeshNormalMaterial();
 
-			animate();
-*/
+	mesh = new THREE.Mesh( geometry, material );
+	scene.add( mesh );
 
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+	renderer = new THREE.WebGLRenderer( { antialias: true } );
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.setAnimationLoop( animation );
+	document.body.appendChild( renderer.domElement );
 
-const loader = new GLTFLoader();
+}
 
-loader.load( '../models/github_logo.glb', function ( gltf ) {
+function animation( time ) {
 
-	scene.add( gltf.scene );
+	mesh.rotation.x = time / 2000;
+	mesh.rotation.y = time / 1000;
 
-}, undefined, function ( error ) {
+	renderer.render( scene, camera );
 
-	console.error( error );
-
-} );
+}
