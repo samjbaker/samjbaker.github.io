@@ -1,124 +1,236 @@
+/*npm run dev to deploy to localhost 3000 */
 import './style.css'
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-const scene = new THREE.Scene();
+let camera, scene, raycaster, renderer, loader, light, controls;
+let git_logo, vinyl, vinyl_mesh;
+const pointer = new THREE.Vector2();
 
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000)
+let INTERSECTED;
 
-const renderer = new THREE.WebGLRenderer({
-  canvas: document.querySelector('#bg'),
-});
+init();
+loadGLTF();
 
-renderer.setPixelRatio( window.devicePixelRatio );
-renderer.setSize( window.innerWidth, window.innerHeight );
-camera.position.setZ(30);
+function init() {
+    scene = new THREE.Scene();
 
-const geometry = new THREE.TorusKnotGeometry( 10, 3, 16, 100 );
-const material = new THREE.MeshStandardMaterial({ color: 0xcc00cc });
-const material2 = new THREE.MeshStandardMaterial({ color: 0xF9FF3C });
-const torus = new THREE.Mesh( geometry, material );
-const torus2 = new THREE.Mesh( geometry, material2 );
-torus.position.set(12,12,12);
-torus2.position.set(10,10,3);
+    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000)
 
-scene.add(torus);
-scene.add(torus2);
+    renderer = new THREE.WebGLRenderer({
+        canvas: document.querySelector('#bg'),
+    });
+    renderer.setPixelRatio( window.devicePixelRatio );
+    renderer.setSize( window.innerWidth, window.innerHeight );
 
-const pointLight = new THREE.PointLight(0xffffff);
-pointLight.position.set(20,20,20);
-const pointLight2 = new THREE.PointLight(0xffffff);
-pointLight2.position.set(-20,-20,20);
+    camera.position.setZ(50);
 
-scene.add(pointLight);
-scene.add(pointLight2);
+    const pointLight = new THREE.PointLight(0xffffff);
+    pointLight.position.set(20,20,20);
+    const pointLight2 = new THREE.PointLight(0xffffff);
+    pointLight2.position.set(-20,-20,20);
 
-/*
-const ambientLight = new THREE.AmbientLight(0xffffff);
+    scene.add(pointLight);
+    scene.add(pointLight2);
 
-scene.add(ambientLight);
+    controls = new OrbitControls( camera, renderer.domElement );
 
+    loader = new GLTFLoader();
 
-const lightHelper = new THREE.PointLightHelper( pointLight );
+    //scene.background = new THREE.Color( 0xf0f0f0 );
 
-scene.add(lightHelper);
+    //const contourTexture = new THREE.TextureLoader().load('contours2.png');
+    //scene.background = contourTexture;
 
+    const starTexture = new THREE.TextureLoader().load('stars.jpeg');
+    scene.background = starTexture;
 
-const gridHelper = new THREE.GridHelper( 2000, 500 );
+    raycaster = new THREE.Raycaster();
 
-scene.add(gridHelper);
-*/
+    document.addEventListener( 'mousemove', onPointerMove );
 
-const controls = new OrbitControls( camera, renderer.domElement );
+    document.addEventListener('click', onClick, false);
 
-function addJunk() {
-  const size = THREE.MathUtils.randFloatSpread( 2 );
-  const geometry = new THREE.SphereGeometry(size, 24, 24);
-  const material = new THREE.MeshBasicMaterial( { color: 0x04235c });
-  const star = new THREE.Mesh( geometry, material );
-
-  const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread( 200 ));
-  star.position.set(x, y, z);
-  scene.add(star);
+    window.addEventListener( 'resize', onWindowResize );
 }
 
-Array(200).fill().forEach(addJunk);
-/*
-const contourTexture = new THREE.TextureLoader().load('contours2.png');
-scene.background = contourTexture;
-*/
-const white = new THREE.Color(0xffffff);
+function onWindowResize() {
 
-scene.background = white;
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
 
-//Me!
-const samTexture = new THREE.TextureLoader().load('crouch.jpg')
+    renderer.setSize( window.innerWidth, window.innerHeight );
 
-const sam = new THREE.Mesh(
-  new THREE.BoxGeometry(10, 10, 10),
-  new THREE.MeshBasicMaterial( {map: samTexture })
-);
+}
 
-sam.position.set(-20,-10,0)
+function onPointerMove( event ) {
 
-scene.add(sam);
+    pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 
-//Adding github model from blender
-const loader = new GLTFLoader();
+}
 
-loader.load( './models/github_logo.glb', function ( gltf ) {
+function onClick(event) {
+    event.preventDefault();
 
-  //gltf.position.set(0,-10,10)
-	scene.add( gltf.scene );
+    pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 
-}, undefined, function ( error ) {
+    raycaster.setFromCamera( pointer, camera );
 
-	console.error( error );
+    var intersects = raycaster.intersectObjects( scene.children, true );
 
-} );
+	if ( intersects.length > 0 ) {
+	    //console.log( 'Intersection:', intersects[ 0 ] );
+        if ((intersects[0].object == vinyl) || (intersects[0].object == git_logo)){
+            window.open(intersects[0].object.userData.URL)
+        }
+        console.log(intersects[0].object.userData)
+        //window.open(intersects[0].object.userData.URL)
+	}
+}
 
-//Renders the scene and updates objects position and rotation 
 function animate() {
-  requestAnimationFrame( animate );
-  torus.rotation.x += 0.01
-  torus.rotation.y += 0.005
-  torus.rotation.z += 0.01
-  torus2.rotation.x += 0.01
-  torus2.rotation.y += 0.05
-  //torus2.rotation.z += 0.01
+    requestAnimationFrame( animate );
+    vinyl_mesh.rotation.x += 0.001
+    vinyl_mesh.rotation.y += 0.001
+    vinyl_mesh.rotation.z += 0.0001
+    git_logo.rotation.x += 0.001
+    git_logo.rotation.y += 0.001
+    git_logo.rotation.z -= 0.001
+    controls.update();
+  
+    render();
+  }
 
-  if(torus2.position.x < 80){
-    torus2.position.x += 0.1
-  }
-  else {
-    torus2.position.x = -80
-  }
+
+function loadGLTF() {
+    loader.load( './models/github_logo.glb', ( gltf ) => {
+
+        gltf.scene.scale.set(8,8,8);
+        gltf.scene.position.set(10,12,0);
+
+        gltf.scene.rotation.y = Math.random() * 2 * Math.PI;
+        gltf.scene.rotation.x = Math.random() * 2 * Math.PI;
+        gltf.scene.rotation.z = Math.random() * 2 * Math.PI;
+        scene.add( gltf.scene );
+        git_logo = gltf.scene.children[2];
+        git_logo.userData = { URL: "http://github.com/samjbaker" }
+        //console.log(dumpObject(git_logo).join('\n'));
+      
+    });
+
+    loader.load( './models/whitelabel.glb', function ( gltf ) {
+
+        //gltf.scene.position.set(0,-10,10)
+        gltf.scene.scale.set(14,14,14);
+        gltf.scene.position.set(-10,-10,-30);
+
+        gltf.scene.rotation.y = Math.random() * 2 * Math.PI;
+        gltf.scene.rotation.x = Math.random() * 2 * Math.PI;
+        gltf.scene.rotation.z = Math.random() * 2 * Math.PI;
+        scene.add( gltf.scene );
+        vinyl_mesh = gltf.scene;
+        vinyl = gltf.scene.children[6].children[0].children[0];
+        vinyl.userData = { URL: "http://www.google.com" }
+        //vinyl = gltf.scene.getObjectByName('Rotater_Empty');
+        //vinyl.userData.URL = "http://www.google.com"
+      
+        console.log(dumpObject(vinyl).join('\n'));
+      }, undefined, function ( error ) {
+      
+          console.error( error );
+      
+      } );
+    /*
+    for ( let i = 0; i < 50; i++ ) {
+
+        loader.load( './models/github_logo.glb', ( gltf ) => {
+
+            //gltf.scene.position.set(0,-10,10)
+            gltf.scene.scale.set(8,8,8);
+            gltf.scene.position.x = Math.random() * 600 - 400;
+            gltf.scene.position.y = Math.random() * 600 - 400;
+            gltf.scene.position.z = Math.random() * 600 - 400;
     
-  controls.update();
+            gltf.scene.rotation.y = Math.random() * 2 * Math.PI;
+            gltf.scene.rotation.x = Math.random() * 2 * Math.PI;
+            gltf.scene.rotation.z = Math.random() * 2 * Math.PI;
 
-  renderer.render( scene, camera );
+            scene.add( gltf.scene );
+            console.log(dumpObject(gltf.scene).join('\n'));
+          
+        });
+
+        loader.load( './models/whitelabel.glb', function ( gltf ) {
+
+            //gltf.scene.position.set(0,-10,10)
+            gltf.scene.scale.set(14,14,14);
+            gltf.scene.position.x = Math.random() * 600 - 400;
+            gltf.scene.position.y = Math.random() * 600 - 400;
+            gltf.scene.position.z = Math.random() * 600 - 400;
+    
+            gltf.scene.rotation.y = Math.random() * 2 * Math.PI;
+            gltf.scene.rotation.x = Math.random() * 2 * Math.PI;
+            gltf.scene.rotation.z = Math.random() * 2 * Math.PI;
+
+            gltf.userData = {
+                URL: "http://www.google.com"
+            };
+            scene.add( gltf.scene );
+          
+          }, undefined, function ( error ) {
+          
+              console.error( error );
+          
+          } );
+
+    }
+    */
 }
 
-animate();
+function render() {
+
+    raycaster.setFromCamera( pointer, camera );
+
+	const intersects = raycaster.intersectObjects( scene.children, true );
+
+	if ( intersects.length > 0 ) {
+
+	if ( INTERSECTED != intersects[ 0 ].object ) {
+
+	    if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+
+	    	INTERSECTED = intersects[ 0 ].object;
+	    	INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+	    	INTERSECTED.material.emissive.setHex( 0x0099ff );
+
+	    }
+
+	} else {
+
+		if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+
+		INTERSECTED = null;
+
+	}
+
+    renderer.render( scene, camera );
+
+}
+
+function dumpObject(obj, lines = [], isLast = true, prefix = '') {
+    const localPrefix = isLast ? '└─' : '├─';
+    lines.push(`${prefix}${prefix ? localPrefix : ''}${obj.name || '*no-name*'} [${obj.type}]`);
+    const newPrefix = prefix + (isLast ? '  ' : '│ ');
+    const lastNdx = obj.children.length - 1;
+    obj.children.forEach((child, ndx) => {
+      const isLast = ndx === lastNdx;
+      dumpObject(child, lines, isLast, newPrefix);
+    });
+    return lines;
+  }
+
+  animate();
