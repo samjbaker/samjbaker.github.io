@@ -6,7 +6,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 let camera, scene, raycaster, renderer, loader, light, controls;
-let git_logo, vinyl, vinyl_mesh, linked;
+let git_logo, vinyl, vinyl_mesh;
 const pointer = new THREE.Vector2();
 
 let INTERSECTED;
@@ -25,7 +25,7 @@ function init() {
     renderer.setPixelRatio( window.devicePixelRatio );
     renderer.setSize( window.innerWidth, window.innerHeight );
 
-    camera.position.setZ(100);
+    camera.position.setZ(50);
 
     const pointLight = new THREE.PointLight(0xffffff);
     pointLight.position.set(20,20,20);
@@ -84,7 +84,7 @@ function onClick(event) {
 
 	if ( intersects.length > 0 ) {
 	    //console.log( 'Intersection:', intersects[ 0 ] );
-        if ((intersects[0].object == vinyl) || (intersects[0].object == git_logo) || (intersects[0].object == linked)){
+        if ((intersects[0].object == vinyl) || (intersects[0].object == git_logo)){
             window.open(intersects[0].object.userData.URL)
         }
         console.log(intersects[0].object.userData)
@@ -100,9 +100,6 @@ function animate() {
     git_logo.rotation.x += 0.001
     git_logo.rotation.y += 0.001
     git_logo.rotation.z -= 0.001
-    linked.rotation.x += 0.002
-    linked.rotation.y += 0.001
-    linked.rotation.z -= 0.001
     controls.update();
   
     render();
@@ -113,7 +110,7 @@ function loadGLTF() {
     loader.load( './models/github_logo.glb', ( gltf ) => {
 
         gltf.scene.scale.set(8,8,8);
-        gltf.scene.position.set(20,0,0);
+        gltf.scene.position.set(10,12,0);
 
         gltf.scene.rotation.y = Math.random() * 2 * Math.PI;
         gltf.scene.rotation.x = Math.random() * 2 * Math.PI;
@@ -129,7 +126,7 @@ function loadGLTF() {
 
         //gltf.scene.position.set(0,-10,10)
         gltf.scene.scale.set(14,14,14);
-        gltf.scene.position.set(-20,-10,-30);
+        gltf.scene.position.set(-10,-10,-30);
 
         gltf.scene.rotation.y = Math.random() * 2 * Math.PI;
         gltf.scene.rotation.x = Math.random() * 2 * Math.PI;
@@ -142,27 +139,6 @@ function loadGLTF() {
         //vinyl.userData.URL = "http://www.google.com"
       
         console.log(dumpObject(vinyl).join('\n'));
-      }, undefined, function ( error ) {
-      
-          console.error( error );
-      
-      } );
-
-
-    loader.load( './models/linked-in-logo.glb', function ( gltf ) {
-
-        //gltf.scene.position.set(0,-10,10)
-        gltf.scene.scale.set(10,10,10);
-        gltf.scene.position.set(-50,-30,-30);
-
-        gltf.scene.rotation.y = Math.random() * 2 * Math.PI;
-        gltf.scene.rotation.x = Math.random() * 2 * Math.PI;
-        gltf.scene.rotation.z = Math.random() * 2 * Math.PI;
-        scene.add( gltf.scene );
-        linked = gltf.scene.children[2];
-        linked.userData = { URL: "http://www.linkedin.com/in/samjbaker123" }
-      
-        console.log(dumpObject(linked).join('\n'));
       }, undefined, function ( error ) {
       
           console.error( error );
